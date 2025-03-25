@@ -28,7 +28,7 @@ GITHUB_DATA_URL = "https://raw.githubusercontent.com/aguskurniawan10/calculator_
 
 # Set page config
 st.set_page_config(page_title="Prediksi GCV", layout="wide")
-st.title("🔍 Prediksi GCV (ARB) LAB")
+st.title("🔍 CALCULATOR BLENDING BATUBARA UBP JPR")
 
 # Function to download data from GitHub
 def download_data_from_github():
