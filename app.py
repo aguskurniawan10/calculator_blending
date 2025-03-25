@@ -193,7 +193,7 @@ label_encoder = models["label_encoder"]
 best_model_info = models["best_model_info"]
 
 # Create tabs for different functionalities
-tab1, tab2 = st.tabs(["Prediksi Standar", "Debugging Info"])
+tab1, tab2 = st.tabs(["Input Data", "Debugging Info"])
 
 with tab1:
     # Input section - supplier selection
