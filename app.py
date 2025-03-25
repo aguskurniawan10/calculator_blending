@@ -1,12 +1,6 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[ ]:
-
-
-#!/usr/bin/env python
-# coding: utf-8
-
 import streamlit as st
 import pandas as pd
 import numpy as np
@@ -198,7 +192,7 @@ tab1, tab2 = st.tabs(["Input Data", "Debugging Info"])
 with tab1:
     # Input section - supplier selection
     st.subheader("Informasi Supplier dan Lokasi")
-    col1, col2 = st.columns(2)
+    col1, col2, col3 = st.columns(3)  # Adjusted to 3 columns
     
     with col1:
         st.markdown("### Supplier 1")
@@ -219,21 +213,33 @@ with tab1:
         else:
             storage_time_2 = 0
     
+    with col3:
+        st.markdown("### Supplier 3")
+        supplier_3 = st.selectbox("Pilih Supplier 3", supplier_list, key="supplier3")
+        location_3 = st.selectbox("Lokasi Pengambilan", ["Tongkang", "Coalyard"], key="loc3")
+        if location_3 == "Coalyard":
+            storage_time_3 = st.number_input("Lama Penyimpanan (hari)", min_value=0, max_value=365, value=0, key="storage3")
+        else:
+            storage_time_3 = 0
+    
     # Blending percentages
     st.subheader("Persentase Campuran")
-    col1, col2, col3 = st.columns(3)
+    col1, col2, col3, col4 = st.columns(4)  # Adjusted to 4 columns
     
     with col1:
-        supplier_1_percentage = st.slider(f"Persentase {supplier_1}", 0, 100, 50, step=10, key="perc1")
+        supplier_1_percentage = st.slider(f"Persentase {supplier_1}", 0, 100, 33, step=1, key="perc1")
     
     with col2:
-        supplier_2_percentage = st.slider(f"Persentase {supplier_2}", 0, 100, 50, step=10, key="perc2")
+        supplier_2_percentage = st.slider(f"Persentase {supplier_2}", 0, 100, 33, step=1, key="perc2")
     
     with col3:
-        biomass_percentage = st.slider("Persentase Biomass", 0, 100, 0, step=1, key="biomass")
+        supplier_3_percentage = st.slider(f"Persentase {supplier_3}", 0, 100, 33, step=1, key="perc3")
+    
+    with col4:
+        biomass_percentage = st.slider("Persentase Biomass", 0, 100, 1, step=1, key="biomass")
     
     # Check if percentages add up to 100
-    total_percentage = supplier_1_percentage + supplier_2_percentage + biomass_percentage
+    total_percentage = supplier_1_percentage + supplier_2_percentage + supplier_3_percentage + biomass_percentage
     if total_percentage != 100:
         st.warning(f"Total persentase saat ini: {total_percentage}%. Idealnya, total persentase adalah 100%.")
     
@@ -250,9 +256,9 @@ with tab1:
     
     # Sample ranges for each parameter to guide users
     param_ranges = {
-        "GCV ARB UNLOADING": (3500, 5500),
-        "TM ARB UNLOADING": (20, 40),
-        "Ash Content ARB UNLOADING": (2, 10),
+        "GCV ARB UNLOADING": (3500.0, 5500.0),
+        "TM ARB UNLOADING": (20.0, 40.0),
+        "Ash Content ARB UNLOADING": (2.0, 10.0),
         "Total Sulphur ARB UNLOADING": (0.1, 1.0)
     }
     
@@ -260,25 +266,36 @@ with tab1:
     
     # Create columns and inputs for each parameter
     for param in parameters:
-        col1, col2 = st.columns(2)
-        min_val, max_val = param_ranges.get(param, (0.0, 100.0))
+        col1, col2, col3 = st.columns(3)  # Adjusted to 3 columns
         
         with col1:
+            min_val, max_val = param_ranges[param]
             param_values[f"{param}_1"] = st.number_input(
                 f"{param} - {supplier_1}", 
-                min_value=float(0), 
-                max_value=float(10000),
+                min_value=float(min_val), 
+                max_value=float(max_val),
                 value=float((min_val + max_val) / 2),
                 key=f"{param}_1"
             )
         
         with col2:
+            min_val, max_val = param_ranges[param]
             param_values[f"{param}_2"] = st.number_input(
                 f"{param} - {supplier_2}", 
-                min_value=float(0), 
-                max_value=float(10000),
+                min_value=float(min_val), 
+                max_value=float(max_val),
                 value=float((min_val + max_val) / 2),
                 key=f"{param}_2"
+            )
+        
+        with col3:
+            min_val, max_val = param_ranges[param]
+            param_values[f"{param}_3"] = st.number_input(
+                f"{param} - {supplier_3}", 
+                min_value=float(min_val), 
+                max_value=float(max_val),
+                value=float((min_val + max_val) / 2),
+                key=f"{param}_3"
             )
     
     # Biomass GCV input if biomass percentage > 0
@@ -295,6 +312,7 @@ with tab1:
         # Encode suppliers
         supplier_encoded_1 = label_encoder.transform([supplier_1])[0]
         supplier_encoded_2 = label_encoder.transform([supplier_2])[0]
+        supplier_encoded_3 = label_encoder.transform([supplier_3])[0]
         
         # Calculate blended values for each parameter
         blended_data.append(supplier_encoded_1)  # First supplier
@@ -302,10 +320,11 @@ with tab1:
         for param in parameters:
             val_1 = param_values[f"{param}_1"]
             val_2 = param_values[f"{param}_2"]
+            val_3 = param_values[f"{param}_3"]
             
             # Calculate weighted average based on percentages
-            if (supplier_1_percentage + supplier_2_percentage) > 0:
-                blended_value = (val_1 * supplier_1_percentage + val_2 * supplier_2_percentage) / (supplier_1_percentage + supplier_2_percentage)
+            if (supplier_1_percentage + supplier_2_percentage + supplier_3_percentage) > 0:
+                blended_value = (val_1 * supplier_1_percentage + val_2 * supplier_2_percentage + val_3 * supplier_3_percentage) / (supplier_1_percentage + supplier_2_percentage + supplier_3_percentage)
             else:
                 blended_value = 0
                 
@@ -334,7 +353,7 @@ with tab1:
             
             # Apply biomass blending if applicable
             if biomass_percentage > 0:
-                final_prediction = (prediction * (supplier_1_percentage + supplier_2_percentage) + 
+                final_prediction = (prediction * (supplier_1_percentage + supplier_2_percentage + supplier_3_percentage) + 
                                   gcv_biomass * biomass_percentage) / 100
             else:
                 final_prediction = prediction
@@ -348,8 +367,15 @@ with tab1:
                 decay_factor_2 = 0.05 * (storage_time_2 / 30)  # Cap at 5% max decrease per supplier
                 final_prediction *= (1 - (decay_factor_2 * supplier_2_percentage / 100))
                 
+            if location_3 == "Coalyard" and storage_time_3 > 0:
+                decay_factor_3 = 0.05 * (storage_time_3 / 30)  # Cap at 5% max decrease per supplier
+                final_prediction *= (1 - (decay_factor_3 * supplier_3_percentage / 100))
+                
             # Ensure result is within reasonable bounds
             final_prediction = max(2000, min(final_prediction, 7000))
+            
+            # Subtract 100 from the final prediction
+            final_prediction -= 150
                 
             # Display results
             st.success(f"Prediksi GCV (ARB) LAB: {final_prediction:.2f} kcal/kg")
@@ -386,4 +412,3 @@ with tab2:
 # Add footer
 st.markdown("---")
 st.markdown("© 2025 GCV Prediction Tool | For optimal results, ensure model is regularly updated with new data.")
-
